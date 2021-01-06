@@ -9,28 +9,51 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      skip_static: ${{ steps.skip_static.outputs.should_skip }}
+      skip_test: $ {{ steps.skip_test.outputs.should_skip }}
     steps:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
           paths_ignore: '["**/static/**", "**/docs/**"]'
+      - id: skip_test
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          cancel_others: 'false'
+          paths: '["docs/**"]'
+      - id: skip_static
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          cancel_others: 'false'
+          paths: '["static/**"]'
 
   main_job:
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo 'something'
+      - run: echo "Main job"
 
-  deploy_static:
+  write_output:
+    needs: pre_job
     runs-on: ubuntu-latest
     steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          cancel_others: 'false'
-          paths: '["static/**"]'
-      - if: ${{ steps.skip_check.outputs.should_skip != 'true' }}
-        run: |
-          echo "Run only if static/ changed.." && sleep 30
-          echo "Do other stuff..."
+      - run: |
+          echo "should_skip is ${{ needs.pre_job.outputs.should_skip }}"
+          echo "skip_test is ${{ needs.pre_job.outputs.skip_test }}"
+          echo "skip_static is ${{ needs.pre_job.outputs.skip_static }}"
+
+  deploy_static:
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.skip_static != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploy static"
+
+  deploy_docs:
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.skip_test != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploy docs"
+
