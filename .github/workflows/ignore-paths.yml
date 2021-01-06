@@ -21,3 +21,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo 'something'
+
+  deploy_static:
+    runs-on: ubuntu-latest
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          cancel_others: 'false'
+          paths: '["static/**"]'
+      - if: ${{ steps.skip_check.outputs.should_skip != 'true' }}
+        run: |
+          echo "Run only if static/ changed.." && sleep 30
+          echo "Do other stuff..."
