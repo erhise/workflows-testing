@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      skip_docs: ${{ steps.skip_docs.outputs.should_skip }}
       skip_static: ${{ steps.skip_static.outputs.should_skip }}
-      skip_test: $ {{ steps.skip_test.outputs.should_skip }}
     steps:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
           paths_ignore: '["**/static/**", "**/docs/**"]'
-      - id: skip_test
+      - id: skip_docs
         uses: fkirc/skip-duplicate-actions@master
         with:
           cancel_others: 'false'
@@ -40,7 +40,7 @@ jobs:
     steps:
       - run: |
           echo "should_skip is ${{ needs.pre_job.outputs.should_skip }}"
-          echo "skip_test is ${{ needs.pre_job.outputs.skip_test }}"
+          echo "skip_docs is ${{ needs.pre_job.outputs.skip_docs }}"
           echo "skip_static is ${{ needs.pre_job.outputs.skip_static }}"
 
   deploy_static:
@@ -52,7 +52,7 @@ jobs:
 
   deploy_docs:
     needs: pre_job
-    if: ${{ needs.pre_job.outputs.skip_test != 'true' }}
+    if: ${{ needs.pre_job.outputs.skip_docs != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "Deploy docs"
